@@ -97,13 +97,15 @@ module.exports = {
   },
   plugins: [
     new rspack.container.ModuleFederationPlugin({
-      name: 'chat_mf',
+      name: 'chatMF',
       filename: 'remoteEntry.js',
-      exposes: {},
+      exposes: {
+        "./MessageButton": "./src/components/MessageButton",
+      },
       shared: {
         react: { eager: true },
         'react-dom': { eager: true },
-        'react-router-dom': { eager: true },
+        'react-router': { eager: true },
       },
     }),
     new rspack.DefinePlugin({

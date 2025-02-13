@@ -2,13 +2,11 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 import './index.scss'
+import MessageButton from './components/MessageButton'
 
 const App = () => (
   <div className="mt-10 text-3xl mx-auto max-w-6xl">
-    <div>Name: chat-mf</div>
-    <div>Framework: react</div>
-    <div>Language: TypeScript</div>
-    <div>CSS: Tailwind</div>
+    <MessageButton userTwoID='wjkwejrqwei324902834' />
   </div>
 )
 const rootElement = document.getElementById('app')
