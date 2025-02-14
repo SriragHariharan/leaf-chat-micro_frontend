@@ -101,6 +101,11 @@ module.exports = {
       filename: 'remoteEntry.js',
       exposes: {
         "./MessageButton": "./src/components/MessageButton",
+        "./Conversations":"./src/pages/Conversations",
+        "./Chat":"./src/pages/Chat",
+      },
+      remotes: {
+        profileMF: "profileMF@http://localhost:8082/remoteEntry.js"
       },
       shared: {
         react: { eager: true },

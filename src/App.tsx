@@ -2,11 +2,11 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 import './index.scss'
-import MessageButton from './components/MessageButton'
+import Chat from './pages/Chat'
 
 const App = () => (
-  <div className="mt-10 text-3xl mx-auto max-w-6xl">
-    <MessageButton userTwoID='wjkwejrqwei324902834' />
+  <div className="text-3xl mx-auto max-w-6xl">
+    <Chat />
   </div>
 )
 const rootElement = document.getElementById('app')

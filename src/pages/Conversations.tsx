@@ -2,9 +2,10 @@ import React from 'react';
 import type { Conversation } from '../types';
 import { conversations } from '../data/dummyData';
 import ConversationCard from '../components/ConversationCard';
+import "../index.scss";
 
 const Conversation = () => {
-  const [chats, setChats] = React.useState<Conversation[]>(conversations);
+  const [chats] = React.useState<Conversation[]>(conversations);
 
   return (
     <div className="min-h-screen max-w-4xl m-auto">

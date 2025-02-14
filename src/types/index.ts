@@ -2,7 +2,6 @@ export interface User {
   id: string;
   name: string;
   avatar: string;
-  lastSeen: Date;
   isOnline: boolean;
 }
 
@@ -41,11 +40,11 @@ export interface Message {
   fileUrl?: string;
 }
 
-// export interface User {
-//   id: string;
-//   name: string;
-//   avatar: string;
-//   status: 'online' | 'offline';
-//   lastSeen?: Date;
-//   isTyping: boolean;
-// }
+export interface User {
+  id: string;
+  name: string;
+  avatar: string;
+  status: 'online' | 'offline';
+  lastSeen?: Date;
+  isTyping: boolean;
+}

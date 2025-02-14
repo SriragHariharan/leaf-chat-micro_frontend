@@ -1,13 +1,21 @@
 import { MessageCircleIcon } from 'lucide-react'
 import React from 'react';
 import '../index.scss'
+import useAxiosInstance from 'profileMF/useAxiosInstance';
 
 function MessageButton({ userTwoID } : { userTwoID: string }) {
+    const axiosInstance = useAxiosInstance();
     const handleClick = () => {
         console.log("Fetching coversation ID for user: " + userTwoID);
         console.log("Redirecting to the chat page....")
+        axiosInstance.get("../chat/conversationID/" + userTwoID)
+        .then(resp => {
+            const conversationID = resp.data?.data?.conversationID;
+            window.location.href = `/chat?conversationID=${conversationID}&friendID=${userTwoID}`;
+        })
+        .catch(err => console.log(err));
     }
-    
+
     return (
         <button
             onClick={handleClick}
