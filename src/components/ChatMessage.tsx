@@ -2,12 +2,15 @@ import React from 'react';
 import { CheckCheck } from 'lucide-react';
 import { Message } from '../types';
 
+
 interface ChatMessageProps {
   message: Message;
+  friendID: string
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
-  const isUser = message.sender === 'user';
+export function ChatMessage({ message, friendID }: ChatMessageProps) {
+
+  const isUser = message.senderID !== friendID;
   const formattedTime = new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
     minute: 'numeric',
@@ -22,7 +25,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         }`}
       >
         <p className='text-base'>{message.content}</p>
-        <div className={`flex items-center justify-between gap-1 text-xs mt-1 ${isUser ? 'text-black' : 'text-gray-500'}`}>
+        <div className={`flex items-center justify-between gap-1 text-[9px] mt-1 ${isUser ? 'text-black' : 'text-gray-500'}`}>
           <span>{formattedTime}</span>
           {isUser && (
             <div className="flex">

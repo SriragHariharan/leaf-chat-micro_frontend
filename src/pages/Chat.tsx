@@ -1,85 +1,121 @@
-// Import necessary dependencies
 import React, { useState, useEffect } from 'react';
-import { Message, User } from '../types'; // Assuming these types are defined in your types.ts
+import { Message } from '../types';
 import { useSearchParams } from 'react-router';
 import { socket } from '../helpers/socket';
-
-// Import necessary components and icons
-import { Circle } from 'lucide-react';
+import useStore from "hostApp/GlobalStore";
+import useAxiosInstance from 'profileMF/useAxiosInstance';
 import { ChatMessage } from '../components/ChatMessage';
 import { MessageInput } from '../components/MessageInput';
-
-// Import global styles
 import '../index.scss';
+import { getValidAccessToken } from '../helpers/tokenUtils';
 
-/*
- * Chat component that handles real-time messaging between two users.
- */
 function Chat() {
-  // Initialize state variables
   const [messages, setMessages] = useState<Message[]>([]);
+  const [friendDetails, setFriendDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
+  const { accessToken, refreshToken, setAccessToken, setRefreshToken, logout } = useStore();
+  const axiosInstance = useAxiosInstance();
 
-  // Get conversation ID and friend ID from search parameters
   const conversationID = searchParams.get('conversationID');
   const friendID = searchParams.get('friendID');
 
-  // Define the other user's details
-  const otherUser: User = {
-    id: '2',
-    name: 'Jane Smith',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-    status: 'online',
-    isTyping: true,
-    isOnline: true
-  };
-
-  /**
-   * Effect hook that handles socket connection and event listeners.
-   */
+  /* connect to a socket and join a room */
   useEffect(() => {
-    // Connect to the socket
     socket.connect();
-
-    // Join the specified room
-    socket.emit("joinRoom", conversationID);
-
-    // Listen for incoming messages
+    socket.emit("joinRoom", conversationID, accessToken);
     socket.on("receiveMessage", (message) => {
-      console.log(message);
       setMessages((prevMessages) => [...prevMessages, message]);
     });
 
-    // Clean up event listeners and disconnect from socket when component unmounts
     return () => {
       socket.off("receiveMessage");
       socket.disconnect();
     };
   }, [conversationID]);
 
-  /*
-   * Handles sending a message to the other user.
-  */
-  const handleSendMessage = (message: string) => {
-    if (message) {
-      socket.emit("sendMessage", { room: conversationID, message });
-    }
+  /* fetch all chats */
+  useEffect(() => {
+    axiosInstance.get("../chat/messages/" + conversationID)
+      .then(resp => setMessages(resp?.data?.data?.messages))
+      .catch(err => console.log(err))
+      .finally(() => setLoading(false));
+  }, [conversationID]);
+
+  /* fetch profile details */
+  useEffect(() => {
+    axiosInstance.get("../chat/profile/" + friendID)
+      .then(resp => setFriendDetails(resp?.data?.data?.profile))
+      .catch(err => console.log(err));
+  }, [friendID]);
+
+  /* typing indicator */
+  const [isFriendTyping, setIsFriendTyping] = useState(false);
+  useEffect(() => {
+    socket.on("userTyping", (userID) => {
+      if (userID === friendID) {
+        setIsFriendTyping(true);
+      }
+    });
+
+    socket.on("userStoppedTyping", (userID) => {
+      if (userID === friendID) {
+        setIsFriendTyping(false);
+      }
+    });
+
+    return () => {
+      socket.off("userTyping");
+      socket.off("userStoppedTyping");
+    };
+  }, [friendID]);
+
+  const handleTyping = () => {
+    socket.emit("typing", { room: conversationID, token: accessToken }); // or use userID
   };
 
+  const handleStopTyping = () => {
+    socket.emit("stopTyping", { room: conversationID, token: accessToken });
+  };
+
+  const handleSendMessage = async (message: string) => {
+    if (!message) return;
+    const validToken = await getValidAccessToken(accessToken, refreshToken, setAccessToken, setRefreshToken, logout);
+    if (!validToken) return;
+    socket.emit("sendMessage", { room: conversationID, message, token: validToken, friendID: friendID });
+    handleStopTyping();
+  };
+
+  /* mark messages as read */
+  useEffect(() => {
+  socket.on("friendReadMessages", ({ room, userID }) => {
+    console.log("Received friendReadMessages event...");
+    
+    setMessages((prevMessages) =>
+      prevMessages.map((message) => ({ ...message, status: 'read' }))
+    );
+  });
+
+  return () => {
+    socket.off("friendReadMessages");
+  };
+}, [conversationID, friendID]);
+
+
+  console.log(messages[0])
+
   return (
-    // Chat container
     <div className="flex flex-col h-[91vh] bg-white max-w-4xl m-auto">
-      {/* Header */}
       <p>{conversationID} ::: {friendID}</p>
       <div className="bg-white border-b p-4 flex items-center gap-4">
         <img
-          src={otherUser.avatar}
-          alt={otherUser.name}
+          src={friendDetails?.profilePic}
+          alt={friendDetails?.username}
           className="w-10 h-10 rounded-full object-cover"
         />
         <div className="flex-1">
-          <h2 className="font-semibold text-sm">{otherUser.name}</h2>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <h2 className="font-semibold text-sm">{friendDetails?.username}</h2>
+          {/* <div className="flex items-center gap-2 text-sm text-gray-500">
             <Circle
               size={8}
               fill={otherUser.status === 'online' ? '#22c55e' : '#gray-400'}
@@ -90,20 +126,33 @@ function Chat() {
             ) : (
               <span>{otherUser.status}</span>
             )}
-          </div>
+          </div> */}
+
+          {isFriendTyping && (
+            <div className="text-green-500 text-sm">Typing...</div>
+          )}
+
         </div>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
-        ))}
+        {loading ? (
+          <p className="text-center text-gray-500">Loading chats...</p>
+        ) : messages.length === 0 ? (
+          <p className="text-center text-gray-500">No conversations yet</p>
+        ) : (
+          messages.map((message) => (
+            <ChatMessage key={message.id} message={message} friendID={friendID!} />
+          ))
+        )}
       </div>
 
-      {/* Input */}
       <div className="p-4">
-        <MessageInput onSendMessage={handleSendMessage} />
+        <MessageInput 
+          onSendMessage={handleSendMessage} 
+          onTyping={handleTyping} 
+          onStopTyping={handleStopTyping} 
+        />
       </div>
     </div>
   );
