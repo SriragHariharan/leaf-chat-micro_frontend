@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { Conversation } from '../types';
-import { conversations } from '../data/dummyData';
+import useAxiosInstance from 'profileMF/useAxiosInstance';
 import ConversationCard from '../components/ConversationCard';
 import "../index.scss";
 
 const Conversation = () => {
-  const [chats] = React.useState<Conversation[]>(conversations);
+  const [chats, setChats] = React.useState([]);
+  const axiosInstance = useAxiosInstance();
+  useEffect(() => {
+    axiosInstance.get('../chat/conversations')
+    .then(resp => setChats(resp?.data?.data?.conversations))
+    .catch(err => console.log(err));
+  }, [])
 
   return (
     <div className="min-h-screen max-w-4xl m-auto">
@@ -16,7 +22,7 @@ const Conversation = () => {
             <p className='text-lg'>No conversations yet.</p>
           </div>
         ) : (
-          chats.map(conversation => <ConversationCard key={conversation.id} conversation={conversation} /> )
+          chats?.map(conversation => <ConversationCard key={conversation?.chatID} conversation={conversation} /> )
         )}
       </div>
     </div>

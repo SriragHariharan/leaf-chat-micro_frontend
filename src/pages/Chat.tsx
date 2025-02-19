@@ -8,6 +8,10 @@ import { ChatMessage } from '../components/ChatMessage';
 import { MessageInput } from '../components/MessageInput';
 import '../index.scss';
 import { getValidAccessToken } from '../helpers/tokenUtils';
+import { Video } from 'lucide-react';
+import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
+import { ZEGOCLOUD_APP_ID, ZEGOCLOUD_SERVER_SECRET } from '../constants/constants';
+
 
 function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -88,7 +92,7 @@ function Chat() {
 
   /* mark messages as read */
   useEffect(() => {
-  socket.on("friendReadMessages", ({ room, userID }) => {
+  socket.on("friendReadMessages", () => {
     console.log("Received friendReadMessages event...");
     
     setMessages((prevMessages) =>
@@ -102,11 +106,46 @@ function Chat() {
 }, [conversationID, friendID]);
 
 
-  console.log(messages[0])
+  /* video call functionality using zegocloud */
+  const appID = ZEGOCLOUD_APP_ID ; // Replace with your ZegoCloud App ID
+const serverSecret = ZEGOCLOUD_SERVER_SECRET  ; // Replace with your Server Secret
+
+const startVideoCall = () => {
+  const roomID = conversationID;
+  const userID = friendID; // Unique identifier for the user
+  const userName = friendDetails?.username || "Guest";
+
+  const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+    appID,
+    serverSecret,
+    roomID!,
+    userID!,
+    userName
+  );
+
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.top = "0";
+  container.style.left = "0";
+  container.style.width = "100vw";
+  container.style.height = "100vh";
+  document.body.appendChild(container);
+
+  const zp = ZegoUIKitPrebuilt.create(kitToken);
+  zp.joinRoom({
+    container,
+    sharedLinks: [],
+    scenario: {
+      mode: ZegoUIKitPrebuilt.OneONoneCall,
+    },
+    onLeaveRoom: () => {
+      document.body.removeChild(container);
+    }
+  });
+};
 
   return (
     <div className="flex flex-col h-[91vh] bg-white max-w-4xl m-auto">
-      <p>{conversationID} ::: {friendID}</p>
       <div className="bg-white border-b p-4 flex items-center gap-4">
         <img
           src={friendDetails?.profilePic}
@@ -115,24 +154,15 @@ function Chat() {
         />
         <div className="flex-1">
           <h2 className="font-semibold text-sm">{friendDetails?.username}</h2>
-          {/* <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Circle
-              size={8}
-              fill={otherUser.status === 'online' ? '#22c55e' : '#gray-400'}
-              className={otherUser.status === 'online' ? 'text-green-500' : 'text-gray-400'}
-            />
-            {otherUser.isTyping ? (
-              <span className="text-green-500">typing...</span>
-            ) : (
-              <span>{otherUser.status}</span>
-            )}
-          </div> */}
 
           {isFriendTyping && (
             <div className="text-green-500 text-sm">Typing...</div>
           )}
-
         </div>
+        {/* Video Call Icon using Lucide */}
+        <button className="text-gray-600 hover:text-blue-500" aria-label="Video Call" title='video call' onClick={startVideoCall}>
+          <Video size={30} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
