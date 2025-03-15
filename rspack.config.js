@@ -105,8 +105,13 @@ module.exports = {
         "./Chat":"./src/pages/Chat",
       },
       remotes: {
-        profileMF: "profileMF@http://localhost:8082/remoteEntry.js",
-        hostApp: "host@http://localhost:8080/remoteEntry.js"
+        // // dev environment
+        // profileMF: "profileMF@http://localhost:8082/remoteEntry.js",
+        // hostApp: "host@http://localhost:8080/remoteEntry.js"
+
+        // prod environment
+        profileMF: "profileMF@https://profile.leaf.monster/remoteEntry.js",
+        hostApp: "host@https://www.leaf.monster/remoteEntry.js"
       },
       shared: {
         react: { eager: true },
