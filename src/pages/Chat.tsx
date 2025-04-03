@@ -44,10 +44,10 @@ function Chat() {
     });
 
     return () => {
-      if (socket.connected) {
-        socket.close();
-        socket.disconnect();
-      }
+      // if (socket.connected) {
+      //   socket.close();
+      //   socket.disconnect();
+      // }
       socket.off("receiveMessage");
     };
   }, [conversationID]);
