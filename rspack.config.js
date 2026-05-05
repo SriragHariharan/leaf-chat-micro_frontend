@@ -2,6 +2,7 @@ const rspack = require('@rspack/core')
 const refreshPlugin = require('@rspack/plugin-react-refresh')
 const isDev = process.env.NODE_ENV === 'development'
 const path = require('path');
+require('dotenv').config();
 
 const printCompilationMessage = require('./compilation.config.js');
 
@@ -105,13 +106,8 @@ module.exports = {
         "./Chat":"./src/pages/Chat",
       },
       remotes: {
-        // // dev environment
-        // profileMF: "profileMF@http://localhost:8082/remoteEntry.js",
-        // hostApp: "host@http://localhost:8080/remoteEntry.js"
-
-        // prod environment
-        profileMF: "profileMF@https://profile.leaf.monster/remoteEntry.js",
-        hostApp: "host@https://www.leaf.monster/remoteEntry.js"
+        profileMF: `profileMF@${process.env.VITE_PROFILE_MF_REMOTE}`,
+        hostApp: `host@${process.env.VITE_HOST_REMOTE}`
       },
       shared: {
         react: { eager: true },
@@ -121,6 +117,8 @@ module.exports = {
     }),
     new rspack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      'process.env.VITE_PROFILE_MF_REMOTE': JSON.stringify(process.env.VITE_PROFILE_MF_REMOTE),
+      'process.env.VITE_HOST_REMOTE': JSON.stringify(process.env.VITE_HOST_REMOTE),
     }),
     new rspack.ProgressPlugin({}),
     new rspack.HtmlRspackPlugin({
